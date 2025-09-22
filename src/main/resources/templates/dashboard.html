@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - LCAD Projet 2025</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><i class="fas fa-layers"></i> LCAD Projet 2025</h1>
+                <p>Data Dashboard</p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/dashboard" class="active">Dashboard</a></li>
+                <li><a href="/h2-console" target="_blank">Database Console</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="dashboard-header">
+            <h2><i class="fas fa-chart-line"></i> Data Dashboard</h2>
+            <div class="dashboard-controls">
+                <select id="locationFilter" class="filter-select">
+                    <option value="">All Locations</option>
+                    <option th:each="location : ${locations}" th:value="${location}" th:text="${location}">Location</option>
+                </select>
+                <button id="refreshDataBtn" class="btn btn-primary">
+                    <i class="fas fa-refresh"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="data-table-container">
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Location</th>
+                        <th>Temperature</th>
+                        <th>Humidity</th>
+                        <th>Description</th>
+                        <th>Timestamp</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="data : ${allData}">
+                        <td th:text="${data.id}">1</td>
+                        <td>
+                            <span class="location-badge" th:text="${data.location}">Paris</span>
+                        </td>
+                        <td>
+                            <span class="temperature" th:text="${data.temperature + '°C'}">22.5°C</span>
+                        </td>
+                        <td>
+                            <span class="humidity" th:text="${data.humidity + '%'}">65%</span>
+                        </td>
+                        <td th:text="${data.description}">Clear sky</td>
+                        <td th:text="${#temporals.format(data.timestamp, 'yyyy-MM-dd HH:mm')}">2025-01-01 12:00</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger delete-btn" th:data-id="${data.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="no-data" id="noDataMessage" style="display: none;">
+            <i class="fas fa-database"></i>
+            <p>No data available. Click "Scrape New Data" to fetch some data.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2025 LCAD Projet. Real-time data dashboard powered by 3-tier architecture.</p>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
