@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "csv-parse": "^6.1.0",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "handlebars": "^4.7.8",

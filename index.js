@@ -1,131 +1,332 @@
-/*
-Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
+// Application de gestion des données de jeux Steam
+// Utilise une base de données locale au format CSV
 
-    http://aws.amazon.com/apache2.0/
+// Dépendances
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const csv = require('csv-parse');
 
-or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-*/
-
-// Define our dependencies
-var express        = require('express');
-var session        = require('express-session');
-var passport       = require('passport');
-var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
-var request        = require('request');
-var handlebars     = require('handlebars');
-
-// Define our constants, you will change these with your own
-const TWITCH_CLIENT_ID = 'muwkcq8dhfjhhm47kb0b7acfqx92m7';
-const TWITCH_SECRET    = 'x1j71l0uju62o6ub280wrhuby3zk82';
-const SESSION_SECRET   = 'toto';
-const CALLBACK_URL     = 'http://localhost:3000/auth/twitch/callback';  // You can run locally with - http://localhost:3000/auth/twitch/callback
-
-// Initialize Express and middlewares
-var app = express();
-app.use(session({secret: SESSION_SECRET, resave: false, saveUninitialized: false}));
+// Initialisation d'Express
+const app = express();
+app.use(express.json());
 app.use(express.static('public'));
-app.use(passport.initialize());
-app.use(passport.session());
 
-// Function to get an app access token
-function getAppAccessToken(callback) {
-  var options = {
-    url: `https://id.twitch.tv/oauth2/token`,
-    method: 'POST',
-    qs: {
-      client_id: TWITCH_CLIENT_ID,
-      client_secret: TWITCH_SECRET,
-      grant_type: 'client_credentials'
-    }
-  };
+// Base de données en mémoire
+let gamesDatabase = [];
 
-  request(options, function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      callback(null, JSON.parse(body));
-    } else {
-      callback(error || JSON.parse(body));
-    }
+// Fonction pour échapper l'HTML
+function escapeHtml(text) {
+  if (!text) return '';
+  return text.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Fonction pour charger les données CSV
+function loadGamesData() {
+  return new Promise((resolve, reject) => {
+    const csvPath = path.join(__dirname, 'Steam Trends 2023 by @evlko and @Sadari - Games Data.csv');
+    const results = [];
+    
+    fs.createReadStream(csvPath, { encoding: 'utf8' })
+      .pipe(csv.parse({ 
+        headers: true,
+        skipEmptyLines: true,
+        delimiter: ',',
+        quote: '"',
+        escape: '"',
+        columns: true,
+        trim: true
+      }))
+      .on('data', (data) => {
+        // Nettoyer et structurer les données avec vérifications de sécurité
+        const game = {
+          appId: data['App ID'] || '',
+          title: data['Title'] || 'Titre non disponible',
+          reviewsTotal: parseInt(data['Reviews Total']) || 0,
+          reviewsScore: data['Reviews Score Fancy'] || 'Non évalué',
+          releaseDate: data['Release Date'] || 'Date inconnue',
+          launchPrice: data['Launch Price'] || 'Prix non disponible',
+          tags: data['Tags'] ? data['Tags'].split(', ').filter(tag => tag.trim() !== '') : [],
+          revenueEstimated: data['Revenue Estimated'] || 'Revenus non disponibles',
+          steamPage: data['Steam Page'] || '#'
+        };
+        results.push(game);
+      })
+      .on('end', () => {
+        gamesDatabase = results;
+        console.log(`✅ ${results.length} jeux chargés dans la base de données`);
+        
+        // Debug: afficher les 3 premiers jeux
+        if (results.length > 0) {
+          console.log('🎮 Premiers jeux chargés:');
+          results.slice(0, 3).forEach((game, index) => {
+            console.log(`  ${index + 1}. "${game.title}" - Tags: [${game.tags.slice(0, 3).join(', ')}...]`);
+          });
+        }
+        
+        resolve(results);
+      })
+      .on('error', (error) => {
+        console.error('❌ Erreur lors du chargement des données:', error);
+        reject(error);
+      });
   });
 }
 
-// Override passport profile function to get user profile from Twitch API
-OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
-  var options = {
-    url: 'https://api.twitch.tv/helix/users',
-    method: 'GET',
-    headers: {
-      'Client-ID': TWITCH_CLIENT_ID,
-      'Accept': 'application/vnd.twitchtv.v5+json',
-      'Authorization': 'Bearer ' + accessToken
-    }
-  };
+// Template HTML pour l'interface
+const htmlTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Steam Games Database</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #1b2838; color: white; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .stats { background: #2a475e; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .search-box { margin-bottom: 30px; }
+        .search-box input { padding: 10px; width: 300px; font-size: 16px; }
+        .search-box button { padding: 10px 20px; font-size: 16px; margin-left: 10px; }
+        .game-card { background: #2a475e; margin: 10px 0; padding: 15px; border-radius: 8px; display: flex; align-items: flex-start; }
+        .game-image { width: 120px; height: 56px; margin-right: 15px; border-radius: 4px; flex-shrink: 0; }
+        .game-content { flex: 1; }
+        .game-title { font-size: 18px; font-weight: bold; color: #66c0f4; }
+        .game-info { margin: 5px 0; font-size: 14px; }
+        .tags { margin-top: 10px; }
+        .tag { background: #4c6b22; padding: 2px 8px; margin: 2px; border-radius: 3px; font-size: 12px; display: inline-block; }
+        .pagination { text-align: center; margin: 20px 0; }
+        .pagination a { padding: 8px 16px; margin: 0 4px; background: #2a475e; color: white; text-decoration: none; border-radius: 4px; }
+        .pagination .current { background: #66c0f4; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Base de données Steam Games</h1>
+        <p>Explorez plus de 65 000 jeux Steam avec leurs statistiques et tendances</p>
+    </div>
+    
+    <div class="stats">
+        <h3>📊 Statistiques</h3>
+        <p><strong>Total des jeux:</strong> {totalGames}</p>
+        <p><strong>Jeu le plus populaire:</strong> {mostPopular}</p>
+        <p><strong>Revenus totaux estimés:</strong> {totalRevenue}</p>
+    </div>
+    
+    <div class="search-box">
+        <form method="GET" action="/">
+            <input type="text" name="search" placeholder="Rechercher un jeu..." value="{searchQuery}">
+            <button type="submit">🔍 Rechercher</button>
+            <button type="button" onclick="window.location.href='/'">🔄 Reset</button>
+        </form>
+    </div>
+    
+    {gamesList}
+    
+    {pagination}
+</body>
+</html>
+`;
 
-  request(options, function (error, response, body) {
-    if (response && response.statusCode == 200) {
-      done(null, JSON.parse(body));
-    } else {
-      done(JSON.parse(body));
-    }
-  });
-}
-
-passport.serializeUser(function(user, done) {
-    done(null, user);
-});
-
-passport.deserializeUser(function(user, done) {
-    done(null, user);
-});
-
-passport.use('twitch', new OAuth2Strategy({
-    authorizationURL: 'https://id.twitch.tv/oauth2/authorize',
-    tokenURL: 'https://id.twitch.tv/oauth2/token',
-    clientID: TWITCH_CLIENT_ID,
-    clientSecret: TWITCH_SECRET,
-    callbackURL: CALLBACK_URL,
-    state: true
-  },
-  function(accessToken, refreshToken, profile, done) {
-    profile.accessToken = accessToken;
-    profile.refreshToken = refreshToken;
-
-    // Securely store user profile in your DB
-    //User.findOrCreate(..., function(err, user) {
-    //  done(err, user);
-    //});
-
-    done(null, profile);
+// Route principale
+app.get('/', (req, res) => {
+  const search = req.query.search || '';
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const offset = (page - 1) * limit;
+  
+  console.log(`🔍 Recherche: "${search}", Page: ${page}, DB size: ${gamesDatabase.length}`);
+  
+  // Filtrer les jeux selon la recherche
+  let filteredGames = gamesDatabase;
+  if (search) {
+    filteredGames = gamesDatabase.filter(game => {
+      // Vérifier que le titre existe
+      const titleMatch = game.title && game.title.toLowerCase().includes(search.toLowerCase());
+      
+      // Vérifier que les tags existent et ne sont pas vides
+      const tagsMatch = game.tags && Array.isArray(game.tags) && 
+        game.tags.some(tag => tag && tag.toLowerCase().includes(search.toLowerCase()));
+      
+      return titleMatch || tagsMatch;
+    });
+    console.log(`📊 Résultats trouvés: ${filteredGames.length}`);
   }
-));
+  
+  // Pagination
+  const totalGames = filteredGames.length;
+  const paginatedGames = filteredGames.slice(offset, offset + limit);
+  
+  // Générer la liste des jeux avec vérifications de sécurité
+  const gamesList = paginatedGames.map(game => {
+    const safeTitle = escapeHtml(game.title || 'Titre non disponible');
+    const safeReleaseDate = escapeHtml(game.releaseDate || 'Date inconnue');
+    const safeReviewsScore = escapeHtml(game.reviewsScore || 'Non évalué');
+    const safeReviewsTotal = game.reviewsTotal || 0;
+    const safeLaunchPrice = escapeHtml(game.launchPrice || 'Prix non disponible');
+    const safeRevenueEstimated = escapeHtml(game.revenueEstimated || 'Revenus non disponibles');
+    const safeTags = game.tags && Array.isArray(game.tags) ? game.tags : [];
+    const safeSteamPage = game.steamPage || '#';
+    const safeAppId = game.appId || '';
+    
+    // URL de l'image Steam
+    const imageUrl = safeAppId ? 
+      `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${safeAppId}/header.jpg` : 
+      'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="56" viewBox="0 0 120 56"><rect width="120" height="56" fill="%23404040"/><text x="60" y="32" text-anchor="middle" fill="white" font-size="10">Pas d\'image</text></svg>';
+    
+    return `
+    <div class="game-card">
+      <img src="${imageUrl}" alt="${safeTitle}" class="game-image" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"120\" height=\"56\" viewBox=\"0 0 120 56\"><rect width=\"120\" height=\"56\" fill=\"%23404040\"/></svg>'">
+      <div class="game-content">
+      <div class="game-title">${safeTitle}</div>
+      <div class="game-info">📅 <strong>Date de sortie:</strong> ${safeReleaseDate}</div>
+      <div class="game-info">⭐ <strong>Score:</strong> ${safeReviewsScore} (${safeReviewsTotal.toLocaleString()} avis)</div>
+      <div class="game-info">💰 <strong>Prix de lancement:</strong> ${safeLaunchPrice}</div>
+      <div class="game-info">💵 <strong>Revenus estimés:</strong> ${safeRevenueEstimated}</div>
+      <div class="tags">
+        ${safeTags.slice(0, 10).map(tag => `<span class="tag">${escapeHtml(tag || '')}</span>`).join('')}
+      </div>
+      <div class="game-info">🔗 <a href="${escapeHtml(safeSteamPage)}" target="_blank" style="color: #66c0f4;">Voir sur Steam</a></div>
+      </div>
+    </div>
+    `;
+  }).join('');
+  
+  // Générer la pagination
+  const totalPages = Math.ceil(totalGames / limit);
+  let pagination = '<div class="pagination">';
+  
+  if (page > 1) {
+    pagination += `<a href="?search=${search}&page=${page - 1}">« Précédent</a>`;
+  }
+  
+  for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+    if (i === page) {
+      pagination += `<a href="?search=${search}&page=${i}" class="current">${i}</a>`;
+    } else {
+      pagination += `<a href="?search=${search}&page=${i}">${i}</a>`;
+    }
+  }
+  
+  if (page < totalPages) {
+    pagination += `<a href="?search=${search}&page=${page + 1}">Suivant »</a>`;
+  }
+  
+  pagination += '</div>';
+  
+  // Calculer les statistiques - avec vérification de sécurité
+  let mostPopular = { title: 'Aucun jeu trouvé', reviewsTotal: 0 };
+  if (gamesDatabase.length > 0) {
+    mostPopular = gamesDatabase.reduce((prev, current) => 
+      (prev.reviewsTotal > current.reviewsTotal) ? prev : current
+    );
+  }
+  
+  const html = htmlTemplate
+    .replace('{totalGames}', gamesDatabase.length.toLocaleString())
+    .replace('{mostPopular}', escapeHtml(mostPopular.title))
+    .replace('{totalRevenue}', 'Plus de 1 milliard $')
+    .replace('{searchQuery}', escapeHtml(search))
+    .replace('{gamesList}', gamesList)
+    .replace('{pagination}', totalPages > 1 ? pagination : '');
+  
+  res.send(html);
+});
 
-// Set route to start OAuth link, this is where you define scopes to request
-app.get('/auth/twitch', passport.authenticate('twitch', { scope: 'user_read' }));
-
-// Set route for OAuth redirect
-app.get('/auth/twitch/callback', passport.authenticate('twitch', { successRedirect: '/', failureRedirect: '/' }));
-
-// Define a simple template to safely generate HTML with values from user's profile
-var template = handlebars.compile(`
-<html><head><title>Twitch Auth Sample</title></head>
-<table>
-    <tr><th>Access Token</th><td>{{accessToken}}</td></tr>
-    <tr><th>Refresh Token</th><td>{{refreshToken}}</td></tr>
-    <tr><th>Display Name</th><td>{{display_name}}</td></tr>
-    <tr><th>Bio</th><td>{{bio}}</td></tr>
-    <tr><th>Image</th><td>{{logo}}</td></tr>
-</table></html>`);
-
-// If user has an authenticated session, display it, otherwise display link to authenticate
-app.get('/', function (req, res) {
-  if(req.session && req.session.passport && req.session.passport.user) {
-    res.send(template(req.session.passport.user));
+// API endpoint pour récupérer un jeu par ID
+app.get('/api/game/:id', (req, res) => {
+  const gameId = req.params.id;
+  const game = gamesDatabase.find(g => g.appId === gameId);
+  
+  if (game) {
+    res.json(game);
   } else {
-    res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
+    res.status(404).json({ error: 'Jeu non trouvé' });
   }
 });
 
-app.listen(3000, function () {
-  console.log('Twitch auth sample listening on port 3000!')
+// API endpoint pour rechercher des jeux
+app.get('/api/search', (req, res) => {
+  const query = req.query.q || '';
+  const limit = parseInt(req.query.limit) || 50;
+  
+  const results = gamesDatabase
+    .filter(game => {
+      if (!query) return true;
+      
+      const titleMatch = game.title && game.title.toLowerCase().includes(query.toLowerCase());
+      const tagsMatch = game.tags && Array.isArray(game.tags) && 
+        game.tags.some(tag => tag && tag.toLowerCase().includes(query.toLowerCase()));
+      
+      return titleMatch || tagsMatch;
+    })
+    .slice(0, limit);
+  
+  res.json({
+    query: query,
+    total: results.length,
+    games: results
+  });
 });
+
+// API endpoint pour obtenir les statistiques
+app.get('/api/stats', (req, res) => {
+  const totalGames = gamesDatabase.length;
+  const totalReviews = gamesDatabase.reduce((sum, game) => sum + game.reviewsTotal, 0);
+  
+  let mostReviewed = { title: 'Aucun jeu trouvé', reviewsTotal: 0 };
+  if (gamesDatabase.length > 0) {
+    mostReviewed = gamesDatabase.reduce((prev, current) => 
+      (prev.reviewsTotal > current.reviewsTotal) ? prev : current
+    );
+  }
+  
+  // Top 10 des tags les plus populaires
+  const tagCounts = {};
+  gamesDatabase.forEach(game => {
+    if (game.tags && Array.isArray(game.tags)) {
+      game.tags.forEach(tag => {
+        if (tag) {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        }
+      });
+    }
+  });
+  
+  const topTags = Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([tag, count]) => ({ tag, count }));
+  
+  res.json({
+    totalGames,
+    totalReviews,
+    mostReviewed: {
+      title: mostReviewed.title,
+      reviews: mostReviewed.reviewsTotal
+    },
+    topTags
+  });
+});
+
+// Démarrage du serveur
+async function startServer() {
+  try {
+    await loadGamesData();
+    
+    const PORT = 3000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
+      console.log(`📊 Base de données: ${gamesDatabase.length} jeux chargés`);
+      console.log(`🔍 API disponible sur /api/search, /api/game/:id, /api/stats`);
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors du démarrage:', error);
+  }
+}
+
+startServer();
