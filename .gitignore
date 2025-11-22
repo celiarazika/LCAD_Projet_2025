@@ -1,0 +1,48 @@
+# Dépendances
+node_modules/
+package-lock.json
+
+# Fichiers de données volumineux (optionnel - à décommenter si vous ne voulez pas versionner les données)
+# games_meta.json
+# games.json
+# games.csv
+
+# Logs
+*.log
+npm-debug.log*
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Environnement
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.bak
+*.old
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# MongoDB
+mongodb-data/
