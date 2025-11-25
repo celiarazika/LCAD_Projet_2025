@@ -1,0 +1,4 @@
+appId,title,positive,negative,reviewsTotal,price,releaseDate,genres,tags,developers,publishers,description
+TEST001,"Jeu Test 1",1000,100,1100,19.99,Jan 1 2024,"Action;Adventure","Singleplayer;Multiplayer","Test Studio","Test Publisher","Un jeu de test pour l'import CSV"
+TEST002,"Jeu Test 2",500,50,550,29.99,Feb 15 2024,"RPG;Strategy","Turn-Based;Fantasy","Studio RPG","RPG Games","Un RPG de test avec stratégie"
+TEST003,"Jeu Gratuit",2000,200,2200,0,Mar 30 2024,"Casual;Indie","Free to Play;Relaxing","Indie Dev","Self Published","Un jeu gratuit et relaxant"

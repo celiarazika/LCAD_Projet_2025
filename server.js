@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
 // Démarrage du serveur
 async function startServer() {
   try {
-    console.log('🚀 Démarrage du serveur...');
+    console.log('Démarrage du serveur...');
     
     // Connexion à MongoDB
     await database.connect();
@@ -45,21 +45,21 @@ async function startServer() {
     const count = await database.getTotalGames();
     
     if (count === 0) {
-      console.log('⚠️  La base de données est vide.');
-      console.log('💡 Exécutez le script de migration pour importer les données:');
+      console.log('La base de données est vide.');
+      console.log('Exécutez le script de migration pour importer les données:');
       console.log('   node scripts/migrate_to_mongodb.js');
     }
     
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`\n${'='.repeat(60)}`);
-      console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-      console.log(`📊 Base de données MongoDB: ${count} jeux`);
-      console.log(`\n🏗️  Architecture 3-tiers:`);
+      console.log(`Serveur démarré sur http://localhost:${PORT}`);
+      console.log(`Base de données MongoDB: ${count} jeux`);
+      console.log(`\nArchitecture 3-tiers:`);
       console.log(`   └─ Couche 1 (Données): GameDatabase (MongoDB)`);
       console.log(`   └─ Couche 2 (Métier): GameService`);
       console.log(`   └─ Couche 3 (API): GameController`);
-      console.log(`\n🔗 API disponible:`);
+      console.log(`\nAPI disponible:`);
       console.log(`   GET    /api/games       - Liste des jeux`);
       console.log(`   GET    /api/games/:id   - Détails d'un jeu`);
       console.log(`   POST   /api/games       - Ajouter un jeu`);
@@ -67,11 +67,13 @@ async function startServer() {
       console.log(`   DELETE /api/games/:id   - Supprimer un jeu`);
       console.log(`   GET    /api/stats       - Statistiques`);
       console.log(`   GET    /api/genres      - Liste des genres`);
+      console.log(`   GET    /api/export/csv  - Exporter en CSV`);
+      console.log(`   POST   /api/import/csv  - Importer depuis CSV`);
       console.log(`${'='.repeat(60)}\n`);
     });
   } catch (error) {
-    console.error('❌ Erreur lors du démarrage:', error);
-    console.error('\n💡 Assurez-vous que MongoDB est installé et en cours d\'exécution:');
+    console.error('Erreur lors du démarrage:', error);
+    console.error('\nAssurez-vous que MongoDB est installé et en cours d\'exécution:');
     console.error('   1. Téléchargez MongoDB: https://www.mongodb.com/try/download/community');
     console.error('   2. Installez MongoDB');
     console.error('   3. Démarrez le service MongoDB');
@@ -82,7 +84,7 @@ async function startServer() {
 
 // Gérer l'arrêt propre
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Arrêt du serveur...');
+  console.log('\nArrêt du serveur...');
   await database.disconnect();
   process.exit(0);
 });

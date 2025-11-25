@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: steam-games-database
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false  # À configurer dans le dashboard Render

@@ -208,6 +208,121 @@ class GameService {
     const excludedGenres = ['nudity', 'sexual content'];
     return await this.db.getAllGenres(excludedGenres);
   }
+
+  /**
+   * Exporter les jeux en CSV
+   */
+  async exportToCSV(limit = 1000) {
+    const games = await this.db.getAllGames({}, { limit });
+    
+    // En-têtes CSV
+    const headers = 'appId,title,positive,negative,reviewsTotal,price,releaseDate,genres,tags,developers,publishers,description\n';
+    
+    // Convertir les jeux en lignes CSV
+    const rows = games.map(game => {
+      return [
+        game.appId || '',
+        `"${(game.title || '').replace(/"/g, '""')}"`,
+        game.positive || 0,
+        game.negative || 0,
+        game.reviewsTotal || 0,
+        game.price || '',
+        game.releaseDate || '',
+        `"${Array.isArray(game.genres) ? game.genres.join(';') : ''}"`,
+        `"${Array.isArray(game.tags) ? game.tags.join(';') : ''}"`,
+        `"${Array.isArray(game.developers) ? game.developers.join(';') : ''}"`,
+        `"${Array.isArray(game.publishers) ? game.publishers.join(';') : ''}"`,
+        `"${(game.description || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`
+      ].join(',');
+    }).join('\n');
+    
+    return headers + rows;
+  }
+
+  /**
+   * Importer des jeux depuis CSV
+   */
+  async importFromCSV(csvData) {
+    const lines = csvData.split('\n').filter(line => line.trim());
+    
+    if (lines.length < 2) {
+      throw new Error('Fichier CSV vide ou invalide');
+    }
+    
+    // Ignorer la ligne d'en-tête
+    const dataLines = lines.slice(1);
+    
+    let imported = 0;
+    let errors = 0;
+    const errorDetails = [];
+    
+    for (const line of dataLines) {
+      try {
+        // Parse CSV simple (gère les guillemets)
+        const values = this.parseCSVLine(line);
+        
+        if (values.length < 2) continue; // Ligne vide ou invalide
+        
+        const gameData = {
+          appId: values[0] || String(Date.now() + Math.random()),
+          title: values[1] || 'Sans titre',
+          positive: parseInt(values[2]) || 0,
+          negative: parseInt(values[3]) || 0,
+          price: parseFloat(values[5]) || null,
+          releaseDate: values[6] || null,
+          genres: values[7] ? values[7].split(';').filter(g => g) : [],
+          tags: values[8] ? values[8].split(';').filter(t => t) : [],
+          developers: values[9] ? values[9].split(';').filter(d => d) : [],
+          publishers: values[10] ? values[10].split(';').filter(p => p) : [],
+          description: values[11] || ''
+        };
+        
+        await this.addGame(gameData);
+        imported++;
+      } catch (error) {
+        errors++;
+        errorDetails.push({ line: line.substring(0, 50), error: error.message });
+      }
+    }
+    
+    return {
+      imported,
+      errors,
+      total: dataLines.length,
+      errorDetails: errorDetails.slice(0, 10) // Limiter à 10 erreurs
+    };
+  }
+
+  /**
+   * Parser une ligne CSV (gère les guillemets)
+   */
+  parseCSVLine(line) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    values.push(current.trim());
+    return values;
+  }
 }
 
 module.exports = GameService;

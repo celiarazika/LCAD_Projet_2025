@@ -4,28 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam Games Database - Architecture 3-tiers</title>
+    <title>Steam Games Database</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div class="header">
-        <h1>🎮 Base de données Steam Games</h1>
-        <p>Architecture 3-tiers - Explorez plus de 100 000 jeux Steam</p>
-    </div>
-
-    <div class="stats" id="stats">
-        <h3>📊 Statistiques</h3>
-        <p><strong>Total des jeux:</strong> <span id="totalGames">Chargement...</span></p>
-        <p><strong>Jeu le plus populaire:</strong> <span id="mostPopular">Chargement...</span></p>
+        <h1>Base de données Steam Games</h1>
+        <p>Explorez plus de 100 000 jeux Steam</p>
     </div>
 
     <button class="toggle-admin" onclick="toggleAdmin()">
-        🔧 Afficher/Masquer l'administration
+        Afficher/Masquer l'administration
     </button>
 
     <div id="admin-section" class="admin-section" style="display: none;">
-        <h3>➕ Ajouter un nouveau jeu</h3>
+        <h3>Ajouter un nouveau jeu</h3>
         <form class="admin-form" id="add-game-form">
             <input type="text" name="title" placeholder="Titre du jeu *" required>
             <input type="text" name="appId" placeholder="App ID (optionnel)">
@@ -40,13 +34,35 @@
             <textarea name="description" placeholder="Description courte"></textarea>
             <button type="submit">Ajouter le jeu</button>
         </form>
+
+        <hr style="margin: 30px 0; border: 1px solid #66c0f4;">
+
+        <h3>Import / Export CSV</h3>
+        <div class="import-export-section">
+            <div class="export-section">
+                <h4>Exporter en CSV</h4>
+                <p>Télécharger les jeux au format CSV</p>
+                <label for="export-limit">Nombre de jeux à exporter:</label>
+                <input type="number" id="export-limit" value="1000" min="1" max="110000"
+                    style="width: 150px; margin: 10px 0;">
+                <button onclick="exportToCSV()" class="export-btn">Télécharger CSV</button>
+            </div>
+
+            <div class="import-section">
+                <h4>Importer depuis CSV</h4>
+                <p>Format: appId,title,positive,negative,price,releaseDate,genres,tags,description</p>
+                <input type="file" id="csv-file-input" accept=".csv" style="margin: 10px 0;">
+                <button onclick="importFromCSV()" class="import-btn">Importer CSV</button>
+                <div id="import-status" style="margin-top: 10px;"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de mise à jour -->
     <div id="update-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close" onclick="closeUpdateModal()">&times;</span>
-            <h3>✏️ Mettre à jour le jeu</h3>
+            <h3>Mettre à jour le jeu</h3>
             <form class="admin-form" id="update-game-form">
                 <input type="hidden" id="update-appId" name="appId">
                 <input type="text" id="update-title" name="title" placeholder="Titre du jeu *" required>
@@ -60,8 +76,8 @@
                 <input type="text" id="update-developers" name="developers" placeholder="Développeur">
                 <input type="text" id="update-publishers" name="publishers" placeholder="Éditeur">
                 <textarea id="update-description" name="description" placeholder="Description courte"></textarea>
-                <button type="submit">💾 Sauvegarder les modifications</button>
-                <button type="button" onclick="closeUpdateModal()">❌ Annuler</button>
+                <button type="submit">Sauvegarder les modifications</button>
+                <button type="button" onclick="closeUpdateModal()">Annuler</button>
             </form>
         </div>
     </div>
@@ -70,7 +86,7 @@
         <form id="search-form">
             <div class="search-row">
                 <input type="text" id="search" placeholder="Rechercher un jeu...">
-                <button type="submit">🔍 Rechercher</button>
+                <button type="submit">Rechercher</button>
             </div>
 
             <div class="filters-row">
@@ -101,7 +117,7 @@
                     </select>
                 </div>
 
-                <button type="button" onclick="resetFilters()">🔄 Reset</button>
+                <button type="button" onclick="resetFilters()">Reset</button>
             </div>
         </form>
     </div>

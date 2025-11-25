@@ -126,15 +126,15 @@ function displayGames(games) {
                      onerror="this.style.display='none'">
                 <div class="game-content">
                     <div class="game-title">${escapeHtml(game.title)}</div>
-                    <div class="game-info">📅 <strong>Date de sortie:</strong> ${game.releaseDate || 'Date inconnue'}</div>
-                    <div class="game-info">⭐ <strong>Score:</strong> ${positivePercentage}% positif (${game.reviewsTotal.toLocaleString()} avis)</div>
-                    <div class="game-info">💰 <strong>Prix:</strong> ${game.price ? game.price + '$' : 'Prix non disponible'}</div>
-                    <div class="game-info">🎮 <strong>Genres:</strong> ${genres}</div>
+                    <div class="game-info"><strong>Date de sortie:</strong> ${game.releaseDate || 'Date inconnue'}</div>
+                    <div class="game-info"><strong>Score:</strong> ${positivePercentage}% positif (${game.reviewsTotal.toLocaleString()} avis)</div>
+                    <div class="game-info"><strong>Prix:</strong> ${game.price ? game.price + '$' : 'Prix non disponible'}</div>
+                    <div class="game-info"><strong>Genres:</strong> ${genres}</div>
                     <div class="tags">${tags}</div>
-                    <div class="game-info">🔗 <a href="https://steamcommunity.com/app/${game.appId}" target="_blank" style="color: #66c0f4;">Voir sur Steam</a></div>
+                    <div class="game-info"><a href="https://steamcommunity.com/app/${game.appId}" target="_blank" style="color: #66c0f4;">Voir sur Steam</a></div>
                     <div class="game-actions">
-                        <button class="edit-btn" onclick="openUpdateModal('${game.appId}')">✏️ Modifier</button>
-                        <button class="delete-btn" onclick="deleteGame('${game.appId}')">🗑️ Supprimer</button>
+                        <button class="edit-btn" onclick="openUpdateModal('${game.appId}')">Modifier</button>
+                        <button class="delete-btn" onclick="deleteGame('${game.appId}')">Supprimer</button>
                     </div>
                 </div>
             </div>
@@ -183,7 +183,7 @@ function handleSearch(event) {
         order: document.getElementById('order').value
     };
     
-    console.log('🔍 Nouveaux filtres:', currentFilters);
+    console.log('Nouveaux filtres:', currentFilters);
     loadGames(1);
 }
 
@@ -211,7 +211,7 @@ async function handleAddGame(event) {
     const formData = new FormData(event.target);
     const data = Object.fromEntries(formData);
     
-    console.log('➕ Ajout d\'un jeu:', data);
+    console.log('Ajout d\'un jeu:', data);
     
     try {
         const response = await fetch(`${API_URL}/games`, {
@@ -223,16 +223,16 @@ async function handleAddGame(event) {
         const result = await response.json();
         
         if (result.success) {
-            alert('✅ Jeu ajouté avec succès!');
+            alert('Jeu ajouté avec succès!');
             event.target.reset();
             loadGames(currentPage);
             loadStatistics();
         } else {
-            alert('❌ Erreur: ' + result.message);
+            alert('Erreur: ' + result.message);
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('❌ Erreur lors de l\'ajout du jeu');
+        alert('Erreur lors de l\'ajout du jeu');
     }
 }
 
@@ -242,9 +242,9 @@ async function deleteGame(appId) {
         return;
     }
     
-    console.log('🗑️ Suppression du jeu:', appId);
+    console.log('Suppression du jeu:', appId);
     
-    try {
+    try{
         const response = await fetch(`${API_URL}/games/${appId}`, {
             method: 'DELETE'
         });
@@ -252,21 +252,21 @@ async function deleteGame(appId) {
         const result = await response.json();
         
         if (result.success) {
-            alert('✅ Jeu supprimé avec succès!');
+            alert('Jeu supprimé avec succès!');
             loadGames(currentPage);
             loadStatistics();
         } else {
-            alert('❌ Erreur: ' + result.message);
+            alert('Erreur: ' + result.message);
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('❌ Erreur lors de la suppression');
+        alert('Erreur lors de la suppression');
     }
 }
 
 // Ouvrir le modal de mise à jour
 async function openUpdateModal(appId) {
-    console.log('✏️ Ouverture du modal pour le jeu:', appId);
+    console.log('Ouverture du modal pour le jeu:', appId);
     
     try {
         // Récupérer les détails du jeu
@@ -292,11 +292,11 @@ async function openUpdateModal(appId) {
             // Afficher le modal
             document.getElementById('update-modal').style.display = 'block';
         } else {
-            alert('❌ Impossible de charger les données du jeu');
+            alert('Impossible de charger les données du jeu');
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('❌ Erreur lors du chargement du jeu');
+        alert('Erreur lors du chargement du jeu');
     }
 }
 
@@ -315,7 +315,7 @@ async function handleUpdateGame(event) {
     const data = Object.fromEntries(formData);
     delete data.appId; // Ne pas envoyer l'appId dans le body
     
-    console.log('✏️ Mise à jour du jeu:', appId, data);
+    console.log('Mise à jour du jeu:', appId, data);
     
     try {
         const response = await fetch(`${API_URL}/games/${appId}`, {
@@ -327,16 +327,16 @@ async function handleUpdateGame(event) {
         const result = await response.json();
         
         if (result.success) {
-            alert('✅ Jeu mis à jour avec succès!');
+            alert('Jeu mis à jour avec succès!');
             closeUpdateModal();
             loadGames(currentPage);
             loadStatistics();
         } else {
-            alert('❌ Erreur: ' + result.message);
+            alert('Erreur: ' + result.message);
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('❌ Erreur lors de la mise à jour du jeu');
+        alert('Erreur lors de la mise à jour du jeu');
     }
 }
 
@@ -357,4 +357,85 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.toString().replace(/[&<>"']/g, m => map[m]);
+}
+
+// Exporter les jeux en CSV
+async function exportToCSV() {
+    const limit = document.getElementById('export-limit').value || 1000;
+    
+    console.log(`Export de ${limit} jeux en CSV...`);
+    
+    try {
+        const response = await fetch(`${API_URL}/export/csv?limit=${limit}`);
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `games_export_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            alert(`${limit} jeux exportés avec succès!`);
+        } else {
+            alert('Erreur lors de l\'export CSV');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'export CSV');
+    }
+}
+
+// Importer des jeux depuis CSV
+async function importFromCSV() {
+    const fileInput = document.getElementById('csv-file-input');
+    const statusDiv = document.getElementById('import-status');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Veuillez sélectionner un fichier CSV');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    console.log(`Import du fichier: ${file.name}`);
+    statusDiv.innerHTML = '<p style="color: #66c0f4;">Import en cours...</p>';
+    
+    try {
+        const csvData = await file.text();
+        
+        const response = await fetch(`${API_URL}/import/csv`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csvData })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            statusDiv.innerHTML = `
+                <p style="color: #4caf50;">${result.message}</p>
+                <p style="font-size: 12px;">
+                    Importés: ${result.data.imported} | 
+                    Erreurs: ${result.data.errors} | 
+                    Total: ${result.data.total}
+                </p>
+            `;
+            
+            // Recharger les jeux et stats
+            loadGames(currentPage);
+            loadStatistics();
+            
+            // Réinitialiser le champ fichier
+            fileInput.value = '';
+        } else {
+            statusDiv.innerHTML = `<p style="color: #f44336;">${result.message}</p>`;
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        statusDiv.innerHTML = `<p style="color: #f44336;">Erreur lors de l'import</p>`;
+    }
 }

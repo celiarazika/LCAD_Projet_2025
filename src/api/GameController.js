@@ -73,7 +73,7 @@ class GameController {
   async addGame(req, res) {
     try {
       const newGame = await this.gameService.addGame(req.body);
-      console.log(`✅ Jeu ajouté: "${newGame.title}" (ID: ${newGame.appId})`);
+      console.log(`Jeu ajouté: "${newGame.title}" (ID: ${newGame.appId})`);
       
       res.status(201).json({
         success: true,
@@ -95,7 +95,7 @@ class GameController {
   async updateGame(req, res) {
     try {
       const updatedGame = await this.gameService.updateGame(req.params.id, req.body);
-      console.log(`✏️ Jeu mis à jour: "${updatedGame.title}" (ID: ${req.params.id})`);
+      console.log(`Jeu mis à jour: "${updatedGame.title}" (ID: ${req.params.id})`);
       
       res.json({
         success: true,
@@ -117,7 +117,7 @@ class GameController {
   async deleteGame(req, res) {
     try {
       await this.gameService.deleteGame(req.params.id);
-      console.log(`🗑️ Jeu supprimé (ID: ${req.params.id})`);
+      console.log(`Jeu supprimé (ID: ${req.params.id})`);
       
       res.json({
         success: true,
@@ -175,6 +175,61 @@ class GameController {
   }
 
   /**
+   * GET /api/export/csv - Exporter les jeux en CSV
+   */
+  async exportCSV(req, res) {
+    try {
+      const { limit = 1000 } = req.query;
+      const csvData = await this.gameService.exportToCSV(parseInt(limit));
+      
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="games_export_${Date.now()}.csv"`);
+      res.send(csvData);
+      
+      console.log(`Export CSV: ${limit} jeux`);
+    } catch (error) {
+      console.error('Erreur dans exportCSV:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de l\'export CSV',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * POST /api/import/csv - Importer des jeux depuis CSV
+   */
+  async importCSV(req, res) {
+    try {
+      const { csvData } = req.body;
+      
+      if (!csvData) {
+        return res.status(400).json({
+          success: false,
+          message: 'Aucune donnée CSV fournie'
+        });
+      }
+
+      const result = await this.gameService.importFromCSV(csvData);
+      console.log(`Import CSV: ${result.imported} jeux importés, ${result.errors} erreurs`);
+      
+      res.json({
+        success: true,
+        message: `Import terminé: ${result.imported} jeux ajoutés`,
+        data: result
+      });
+    } catch (error) {
+      console.error('Erreur dans importCSV:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de l\'import CSV',
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Créer les routes
    */
   createRoutes() {
@@ -185,6 +240,8 @@ class GameController {
     router.delete('/games/:id', this.deleteGame.bind(this));
     router.get('/stats', this.getStatistics.bind(this));
     router.get('/genres', this.getGenres.bind(this));
+    router.get('/export/csv', this.exportCSV.bind(this));
+    router.post('/import/csv', this.importCSV.bind(this));
     
     return router;
   }

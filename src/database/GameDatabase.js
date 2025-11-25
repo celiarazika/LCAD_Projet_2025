@@ -15,7 +15,7 @@ class GameDatabase {
    */
   async connect() {
     try {
-      console.log('🔗 Connexion à MongoDB...');
+      console.log('Connexion à MongoDB...');
       this.client = new MongoClient(config.mongoUrl, config.options);
       await this.client.connect();
       
@@ -23,14 +23,14 @@ class GameDatabase {
       this.collection = this.db.collection(config.collectionName);
       this.isConnected = true;
       
-      console.log(`✅ Connecté à MongoDB: ${config.dbName}`);
+      console.log(`Connecté à MongoDB: ${config.dbName}`);
       
       // Créer des index pour améliorer les performances
       await this.createIndexes();
       
       return true;
     } catch (error) {
-      console.error('❌ Erreur de connexion MongoDB:', error);
+      console.error('Erreur de connexion MongoDB:', error);
       throw error;
     }
   }
@@ -44,9 +44,9 @@ class GameDatabase {
       await this.collection.createIndex({ title: 'text', tags: 'text' });
       await this.collection.createIndex({ genres: 1 });
       await this.collection.createIndex({ reviewsTotal: -1 });
-      console.log('📇 Index créés sur la collection');
+      console.log('Index créés sur la collection');
     } catch (error) {
-      console.warn('⚠️ Erreur lors de la création des index:', error.message);
+      console.warn('Erreur lors de la création des index:', error.message);
     }
   }
 
@@ -57,7 +57,7 @@ class GameDatabase {
     if (this.client) {
       await this.client.close();
       this.isConnected = false;
-      console.log('🔌 Déconnecté de MongoDB');
+      console.log('Déconnecté de MongoDB');
     }
   }
 
