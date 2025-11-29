@@ -6,12 +6,18 @@ let currentFilters = {
     search: '',
     genre: '',
     sort: 'popularity',
-    order: 'desc'
+    order: 'desc',
+    priceMin: '',
+    priceMax: '',
+    scoreMin: '',
+    scoreMax: '',
+    dateMin: '',
+    dateMax: ''
 };
 
 // Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 Frontend initialisé - Architecture 3-tiers');
+    console.log('Frontend initialisé - Architecture 3-tiers');
     
     // Charger les statistiques
     loadStatistics();
@@ -29,6 +35,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('genre').addEventListener('change', handleSearch);
     document.getElementById('sort').addEventListener('change', handleSearch);
     document.getElementById('order').addEventListener('change', handleSearch);
+    
+    // Event listeners pour les filtres avancés
+    document.getElementById('priceMin').addEventListener('change', handleSearch);
+    document.getElementById('priceMax').addEventListener('change', handleSearch);
+    document.getElementById('scoreMin').addEventListener('change', handleSearch);
+    document.getElementById('scoreMax').addEventListener('change', handleSearch);
+    document.getElementById('dateMin').addEventListener('change', handleSearch);
+    document.getElementById('dateMax').addEventListener('change', handleSearch);
 });
 
 // Charger les statistiques
@@ -180,7 +194,13 @@ function handleSearch(event) {
         search: document.getElementById('search').value,
         genre: document.getElementById('genre').value,
         sort: document.getElementById('sort').value,
-        order: document.getElementById('order').value
+        order: document.getElementById('order').value,
+        priceMin: document.getElementById('priceMin').value,
+        priceMax: document.getElementById('priceMax').value,
+        scoreMin: document.getElementById('scoreMin').value,
+        scoreMax: document.getElementById('scoreMax').value,
+        dateMin: document.getElementById('dateMin').value,
+        dateMax: document.getElementById('dateMax').value
     };
     
     console.log('Nouveaux filtres:', currentFilters);
@@ -193,6 +213,12 @@ function resetFilters() {
     document.getElementById('genre').value = '';
     document.getElementById('sort').value = 'popularity';
     document.getElementById('order').value = 'desc';
+    document.getElementById('priceMin').value = '';
+    document.getElementById('priceMax').value = '';
+    document.getElementById('scoreMin').value = '';
+    document.getElementById('scoreMax').value = '';
+    document.getElementById('dateMin').value = '';
+    document.getElementById('dateMax').value = '';
     
     currentFilters = {
         search: '',
@@ -438,4 +464,15 @@ async function importFromCSV() {
         console.error('Erreur:', error);
         statusDiv.innerHTML = `<p style="color: #f44336;">Erreur lors de l'import</p>`;
     }
+}
+
+// Basculer l'affichage des filtres avancés
+function toggleAdvancedFilters() {
+    const content = document.getElementById('advanced-filters-content');
+    const isVisible = content.style.display !== 'none';
+    content.style.display = isVisible ? 'none' : 'block';
+    
+    // Changer l'icône
+    const header = document.querySelector('.advanced-filters h4');
+    header.textContent = isVisible ? '▼ Filtres avancés' : '▲ Filtres avancés';
 }

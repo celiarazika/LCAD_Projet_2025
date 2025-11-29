@@ -10,12 +10,46 @@ class GameService {
    * Rechercher et filtrer les jeux
    */
   async searchGames(filters = {}) {
-    const { search = '', genre = '', page = 1, limit = 20, sort = 'title', order = 'asc' } = filters;
+    const { 
+      search = '', 
+      genre = '', 
+      page = 1, 
+      limit = 20, 
+      sort = 'title', 
+      order = 'asc',
+      priceMin,
+      priceMax,
+      dateMin,
+      dateMax,
+      scoreMin,
+      scoreMax
+    } = filters;
     
     // Construction des filtres pour MongoDB
     const dbFilters = {};
     if (search) dbFilters.search = search;
     if (genre) dbFilters.genre = genre;
+    
+    // Filtres de prix
+    if (priceMin !== undefined || priceMax !== undefined) {
+      dbFilters.price = {};
+      if (priceMin !== undefined) dbFilters.price.$gte = parseFloat(priceMin);
+      if (priceMax !== undefined) dbFilters.price.$lte = parseFloat(priceMax);
+    }
+    
+    // Filtres de date
+    if (dateMin || dateMax) {
+      dbFilters.releaseDate = {};
+      if (dateMin) dbFilters.releaseDate.$gte = dateMin;
+      if (dateMax) dbFilters.releaseDate.$lte = dateMax;
+    }
+    
+    // Filtres de score (pourcentage positif)
+    if (scoreMin !== undefined || scoreMax !== undefined) {
+      dbFilters.score = {};
+      if (scoreMin !== undefined) dbFilters.score.$gte = parseFloat(scoreMin);
+      if (scoreMax !== undefined) dbFilters.score.$lte = parseFloat(scoreMax);
+    }
     
     // Construction des options de tri MongoDB
     const sortOptions = this.buildSortOptions(sort, order);

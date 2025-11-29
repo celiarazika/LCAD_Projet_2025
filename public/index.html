@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steam Games Database</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -118,6 +121,46 @@
                 </div>
 
                 <button type="button" onclick="resetFilters()">Reset</button>
+            </div>
+
+            <!-- Filtres avancés -->
+            <div class="advanced-filters">
+                <h4 onclick="toggleAdvancedFilters()" style="cursor: pointer; color: #66c0f4; margin: 10px 0;">
+                    ▼ Filtres avancés
+                </h4>
+                <div id="advanced-filters-content" style="display: none;">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label for="priceMin">Prix min (€):</label>
+                            <input type="number" id="priceMin" placeholder="Ex: 0" step="0.01" min="0">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="priceMax">Prix max (€):</label>
+                            <input type="number" id="priceMax" placeholder="Ex: 60" step="0.01" min="0">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="scoreMin">Score min (%):</label>
+                            <input type="number" id="scoreMin" placeholder="Ex: 70" min="0" max="100">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="scoreMax">Score max (%):</label>
+                            <input type="number" id="scoreMax" placeholder="Ex: 100" min="0" max="100">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateMin">Date min:</label>
+                            <input type="text" id="dateMin" placeholder="Ex: Jan 1, 2020">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateMax">Date max:</label>
+                            <input type="text" id="dateMax" placeholder="Ex: Dec 31, 2024">
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </div>

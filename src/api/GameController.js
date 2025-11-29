@@ -18,7 +18,13 @@ class GameController {
         sort: req.query.sort || 'title',
         order: req.query.order || 'asc',
         page: parseInt(req.query.page) || 1,
-        limit: parseInt(req.query.limit) || 20
+        limit: parseInt(req.query.limit) || 20,
+        priceMin: req.query.priceMin ? parseFloat(req.query.priceMin) : undefined,
+        priceMax: req.query.priceMax ? parseFloat(req.query.priceMax) : undefined,
+        dateMin: req.query.dateMin || undefined,
+        dateMax: req.query.dateMax || undefined,
+        scoreMin: req.query.scoreMin ? parseFloat(req.query.scoreMin) : undefined,
+        scoreMax: req.query.scoreMax ? parseFloat(req.query.scoreMax) : undefined
       };
 
       const result = await this.gameService.searchGames(filters);

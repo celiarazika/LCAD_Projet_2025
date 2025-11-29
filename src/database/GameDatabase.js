@@ -93,6 +93,71 @@ class GameDatabase {
       query.genres = filters.genre;
     }
     
+    // Filtres de prix
+    if (filters.price) {
+      query.price = filters.price;
+    }
+    
+    // Filtres de date
+    if (filters.releaseDate) {
+      query.releaseDate = filters.releaseDate;
+    }
+    
+    // Filtres de score (calculé à partir de positive/(positive+negative))
+    if (filters.score) {
+      // Pour MongoDB, on utilise $expr pour calculer le pourcentage
+      const conditions = [];
+      
+      if (filters.score.$gte !== undefined) {
+        conditions.push({
+          $expr: {
+            $gte: [
+              {
+                $cond: {
+                  if: { $eq: [{ $add: ['$positive', '$negative'] }, 0] },
+                  then: 0,
+                  else: {
+                    $multiply: [
+                      { $divide: ['$positive', { $add: ['$positive', '$negative'] }] },
+                      100
+                    ]
+                  }
+                }
+              },
+              filters.score.$gte
+            ]
+          }
+        });
+      }
+      
+      if (filters.score.$lte !== undefined) {
+        conditions.push({
+          $expr: {
+            $lte: [
+              {
+                $cond: {
+                  if: { $eq: [{ $add: ['$positive', '$negative'] }, 0] },
+                  then: 0,
+                  else: {
+                    $multiply: [
+                      { $divide: ['$positive', { $add: ['$positive', '$negative'] }] },
+                      100
+                    ]
+                  }
+                }
+              },
+              filters.score.$lte
+            ]
+          }
+        });
+      }
+      
+      if (conditions.length > 0) {
+        query.$and = query.$and || [];
+        query.$and.push(...conditions);
+      }
+    }
+    
     return query;
   }
 

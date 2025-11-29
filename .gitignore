@@ -46,3 +46,6 @@ build/
 
 # MongoDB
 mongodb-data/
+
+#rapport
+rapport/
