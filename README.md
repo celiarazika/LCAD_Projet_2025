@@ -37,7 +37,6 @@ Application web de recherche et gestion de jeux Steam avec architecture 3-tiers 
 - 🖼️ **Images agrandies** (240px × 135px)
 - 📊 **Statistiques** en temps réel
 - 🎨 **Design moderne** et responsive
-- 🚫 **Filtrage automatique** du contenu adulte
 
 ## 🏗️ Architecture
 
