@@ -1,0 +1,41 @@
+# Fichiers à ignorer lors de l'upload vers Cloud Build
+
+# Dépendances (seront réinstallées)
+node_modules/
+
+# Fichiers de données volumineux (ne sont pas nécessaires dans le conteneur)
+games_meta.json
+games.json
+games.csv
+
+# Fichiers Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+rapport/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# MongoDB local
+mongodb-data/
+
+# IDE
+.vscode/
+.idea/
+
+# Fichiers temporaires
+*.tmp
+*.bak
+*.old

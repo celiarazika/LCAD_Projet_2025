@@ -72,13 +72,18 @@ async function startServer() {
       console.log(`${'='.repeat(60)}\n`);
     });
   } catch (error) {
-    console.error('Erreur lors du démarrage:', error);
-    console.error('\nAssurez-vous que MongoDB est installé et en cours d\'exécution:');
-    console.error('   1. Téléchargez MongoDB: https://www.mongodb.com/try/download/community');
-    console.error('   2. Installez MongoDB');
-    console.error('   3. Démarrez le service MongoDB');
-    console.error('   4. Relancez ce serveur\n');
-    process.exit(1);
+    console.warn('\n⚠️  Impossible de se connecter à MongoDB:', error.message);
+    console.log('Le serveur démarre sans base de données...\n');
+    
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`Serveur démarré sur http://localhost:${PORT}`);
+      console.log(`⚠️  Base de données MongoDB: NON CONNECTÉE`);
+      console.log(`\nPour connecter MongoDB, définissez MONGO_URL:`);
+      console.log(`   MONGO_URL=mongodb+srv://user:pass@cluster.mongodb.net/`);
+      console.log(`${'='.repeat(60)}\n`);
+    });
   }
 }
 

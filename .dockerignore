@@ -1,0 +1,36 @@
+# Dépendances
+node_modules/
+npm-debug.log
+
+# Fichiers Git
+.git/
+.gitignore
+
+# Fichiers de développement
+.env.local
+.vscode/
+.idea/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Documentation et rapport
+README.md
+rapport/
+*.md
+
+# Fichiers temporaires
+*.log
+*.tmp
+*.temp
+*.bak
+*.old
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Données MongoDB locales
+mongodb-data/
