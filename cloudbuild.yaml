@@ -1,0 +1,28 @@
+steps:
+  # Build de l'image Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/steam-games-app', '.']
+  
+  # Push de l'image vers Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/steam-games-app']
+  
+  # Déploiement sur Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'steam-games-app'
+      - '--image=gcr.io/$PROJECT_ID/steam-games-app'
+      - '--region=europe-west1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=1Gi'
+      - '--cpu=1'
+
+images:
+  - 'gcr.io/$PROJECT_ID/steam-games-app'
+
+options:
+  machineType: 'E2_HIGHCPU_8'

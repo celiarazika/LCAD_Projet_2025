@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Games Database</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="header">
+        <h1>Base de données Steam Games</h1>
+        <p>Explorez plus de 100 000 jeux Steam</p>
+    </div>
+
+    <button class="toggle-admin" onclick="toggleAdmin()">
+        Afficher/Masquer l'administration
+    </button>
+
+    <div id="admin-section" class="admin-section" style="display: none;">
+        <h3>Ajouter un nouveau jeu</h3>
+        <form class="admin-form" id="add-game-form">
+            <input type="text" name="title" placeholder="Titre du jeu *" required>
+            <input type="text" name="appId" placeholder="App ID (optionnel)">
+            <input type="number" name="positive" placeholder="Avis positifs" value="0">
+            <input type="number" name="negative" placeholder="Avis négatifs" value="0">
+            <input type="number" step="0.01" name="price" placeholder="Prix (ex: 19.99)">
+            <input type="text" name="releaseDate" placeholder="Date de sortie (ex: Jan 1, 2024)">
+            <input type="text" name="genres" placeholder="Genres (séparés par virgule)">
+            <input type="text" name="tags" placeholder="Tags (séparés par virgule)">
+            <input type="text" name="developers" placeholder="Développeur">
+            <input type="text" name="publishers" placeholder="Éditeur">
+            <textarea name="description" placeholder="Description courte"></textarea>
+            <button type="submit">Ajouter le jeu</button>
+        </form>
+
+        <hr style="margin: 30px 0; border: 1px solid #66c0f4;">
+
+        <h3>Import / Export CSV</h3>
+        <div class="import-export-section">
+            <div class="export-section">
+                <h4>Exporter en CSV</h4>
+                <p>Télécharger les jeux au format CSV</p>
+                <label for="export-limit">Nombre de jeux à exporter:</label>
+                <input type="number" id="export-limit" value="1000" min="1" max="110000"
+                    style="width: 150px; margin: 10px 0;">
+                <button onclick="exportToCSV()" class="export-btn">Télécharger CSV</button>
+            </div>
+
+            <div class="import-section">
+                <h4>Importer depuis CSV</h4>
+                <p>Format: appId,title,positive,negative,price,releaseDate,genres,tags,description</p>
+                <input type="file" id="csv-file-input" accept=".csv" style="margin: 10px 0;">
+                <button onclick="importFromCSV()" class="import-btn">Importer CSV</button>
+                <div id="import-status" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+    </div>
+    <div id="update-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeUpdateModal()">&times;</span>
+            <h3>Mettre à jour le jeu</h3>
+            <form class="admin-form" id="update-game-form">
+                <input type="hidden" id="update-appId" name="appId">
+                <input type="text" id="update-title" name="title" placeholder="Titre du jeu *" required>
+                <input type="number" id="update-positive" name="positive" placeholder="Avis positifs">
+                <input type="number" id="update-negative" name="negative" placeholder="Avis négatifs">
+                <input type="number" step="0.01" id="update-price" name="price" placeholder="Prix (ex: 19.99)">
+                <input type="text" id="update-releaseDate" name="releaseDate"
+                    placeholder="Date de sortie (ex: Jan 1, 2024)">
+                <input type="text" id="update-genres" name="genres" placeholder="Genres (séparés par virgule)">
+                <input type="text" id="update-tags" name="tags" placeholder="Tags (séparés par virgule)">
+                <input type="text" id="update-developers" name="developers" placeholder="Développeur">
+                <input type="text" id="update-publishers" name="publishers" placeholder="Éditeur">
+                <textarea id="update-description" name="description" placeholder="Description courte"></textarea>
+                <button type="submit">Sauvegarder les modifications</button>
+                <button type="button" onclick="closeUpdateModal()">Annuler</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <form id="search-form">
+            <div class="search-row">
+                <input type="text" id="search" placeholder="Rechercher un jeu...">
+                <button type="submit">Rechercher</button>
+            </div>
+
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label for="genre">Genre:</label>
+                    <select id="genre">
+                        <option value="">-- Tous les genres --</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="sort">Trier par:</label>
+                    <select id="sort">
+                        <option value="title">Titre (A-Z)</option>
+                        <option value="score">Score</option>
+                        <option value="price">Prix</option>
+                        <option value="date">Date de sortie</option>
+                        <option value="reviews">Nombre d'avis</option>
+                        <option value="popularity" selected>Popularité</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="order">Ordre:</label>
+                    <select id="order">
+                        <option value="asc">Croissant ↑</option>
+                        <option value="desc" selected>Décroissant ↓</option>
+                    </select>
+                </div>
+
+                <button type="button" onclick="resetFilters()">Reset</button>
+            </div>
+
+            <!-- Filtres avancés -->
+            <div class="advanced-filters">
+                <h4 onclick="toggleAdvancedFilters()" style="cursor: pointer; color: #66c0f4; margin: 10px 0;">
+                    ▼ Filtres avancés
+                </h4>
+                <div id="advanced-filters-content" style="display: none;">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label for="priceMin">Prix min (€):</label>
+                            <input type="number" id="priceMin" placeholder="Ex: 0" step="0.01" min="0">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="priceMax">Prix max (€):</label>
+                            <input type="number" id="priceMax" placeholder="Ex: 60" step="0.01" min="0">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="scoreMin">Score min (%):</label>
+                            <input type="number" id="scoreMin" placeholder="Ex: 70" min="0" max="100">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="scoreMax">Score max (%):</label>
+                            <input type="number" id="scoreMax" placeholder="Ex: 100" min="0" max="100">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateMin">Date min:</label>
+                            <input type="text" id="dateMin" placeholder="Ex: Jan 1, 2020">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateMax">Date max:</label>
+                            <input type="text" id="dateMax" placeholder="Ex: Dec 31, 2024">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="games-list" class="games-list">
+        <p>Chargement des jeux...</p>
+    </div>
+
+    <div id="pagination" class="pagination"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
